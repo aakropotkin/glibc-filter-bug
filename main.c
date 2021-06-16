@@ -10,7 +10,7 @@ extern int baz( int );
 main( int argc, char * argv[], char ** envp )
 {
   int x = 5;
-  if ( ( 0 < argc ) && ( argv[1][0] == '-' ) && ( argv[1][1] == 'v' ) )
+  if ( ( 1 < argc ) && ( argv[1][0] == '-' ) && ( argv[1][1] == 'v' ) )
     {
         printf( "foo( %d ) = %d\n", x, foo( x ) );
         printf( "bar( %d ) = %d\n", x, bar( x ) );

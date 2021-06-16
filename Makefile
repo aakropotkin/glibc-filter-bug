@@ -5,15 +5,18 @@
 #
 # ============================================================================ #
 
-.DEFAULT_GOAL: check
+.PHONY: check test
 
-TOPDIR = $(dir $(firstword $(MAKEFILES_LIST)))
+.DEFAULT_GOAL = check
+
+TOPDIR = $(dir $(firstword $(MAKEFILE_LIST)))
 
 BINS = mainBM mainBF mainMB mainFB
 
+CFLAGS = -ggdb3 -frecord-gcc-switches
 libs_CFLAGS = -shared -fPIC
 libs_LDFLAGS = -shared
-libpath_LDFLAGS = -L$(TOPDIR) -rpath $(TOPDIR)
+libpath_LDFLAGS = -L$(TOPDIR) -Wl,-rpath,$(TOPDIR)
 
 
 # ---------------------------------------------------------------------------- #
@@ -24,28 +27,28 @@ foo.o foo_filt.o bar.o: CFLAGS += $(libs_CFLAGS)
 # ---------------------------------------------------------------------------- #
 #
 libfoo.so: foo.o
-	$(LD) -o $@ -h $@ $(libs_LDFLAGS) $<
+	$(CC) -o $@ -Wl,-h,$@ $(libs_LDFLAGS) $<
 
-libfoomin.so: libfoo.so foo_filt.o
-	$(LD) -o $@ -h $@ $(libs_LDFLAGS) $(libpath_LDFLAGS) -F $^
+libfoomin.so: foo_filt.o libfoo.so
+	$(CC) -o $@ -Wl,-h,$@ $(libs_LDFLAGS) $(libpath_LDFLAGS) $< -Wl,-F,libfoo.so
 
 libbar.so: bar.o libfoomin.so
-	$(LD) -o $@ -h $@ $(libs_LDFLAGS) $(libpath_LDFLAGS) $< -lfoomin
+	$(CC) -o $@ -Wl,-h,$@ $(libs_LDFLAGS) $(libpath_LDFLAGS) $< -lfoomin
 
 
 # ---------------------------------------------------------------------------- #
 
 mainBM: main.o libfoomin.so libbar.so
-	$(LD) -o $@ $(libpath_LDFLAGS) $< -lbar -lfoomin -lc
+	$(CC) -o $@ $(libpath_LDFLAGS) $< -lbar -lfoomin
 
 mainBF: main.o libfoo.so libbar.so
-	$(LD) -o $@ $(libpath_LDFLAGS) $< -lbar -lfoo -lc
+	$(CC) -o $@ $(libpath_LDFLAGS) $< -lbar -lfoo
 
 mainMB: main.o libfoomin.so libbar.so
-	$(LD) -o $@ $(libpath_LDFLAGS) $< -lfoomin -lbar -lc
+	$(CC) -o $@ $(libpath_LDFLAGS) $< -lfoomin -lbar
 
 mainFB: main.o libfoo.so libbar.so
-	$(LD) -o $@ $(libpath_LDFLAGS) $< -lfoo -lbar -lc
+	$(CC) -o $@ $(libpath_LDFLAGS) $< -lfoo -lbar
 
 
 # ---------------------------------------------------------------------------- #
@@ -54,7 +57,7 @@ clean:
 	-$(RM) -f $(BINS) *.o lib*.so
 
 check: test.sh $(BINS)
-	-./$< && echo PASS || echo FAIL
+	@./$< && echo PASS || ( echo FAIL && exit 1 )
 
 
 # ---------------------------------------------------------------------------- #
