@@ -9,13 +9,13 @@
 
 .DEFAULT_GOAL = check
 
-TOPDIR = $(dir $(firstword $(MAKEFILE_LIST)))
+TOPDIR = $(patsubst %/,%,$(dir $(abspath $(firstword $(MAKEFILE_LIST)))))
 
 BINS = mainBM mainBF mainMB mainFB
 
-CFLAGS = -ggdb3 -frecord-gcc-switches
+CFLAGS += -ggdb3 -frecord-gcc-switches
 libs_CFLAGS = -shared -fPIC
-libs_LDFLAGS = -shared
+libs_LDFLAGS = $(LDFLAGS) -shared
 libpath_LDFLAGS = -L$(TOPDIR) -Wl,-rpath,$(TOPDIR)
 
 
@@ -39,16 +39,16 @@ libbar.so: bar.o libfoomin.so
 # ---------------------------------------------------------------------------- #
 
 mainBM: main.o libfoomin.so libbar.so
-	$(CC) -o $@ $(libpath_LDFLAGS) $< -lbar -lfoomin
+	$(CC) -o $@ $(LDFLAGS) $(libpath_LDFLAGS) $< -lbar -lfoomin
 
 mainBF: main.o libfoo.so libbar.so
-	$(CC) -o $@ $(libpath_LDFLAGS) $< -lbar -lfoo
+	$(CC) -o $@ $(LDFLAGS) $(libpath_LDFLAGS) $< -lbar -lfoo
 
 mainMB: main.o libfoomin.so libbar.so
-	$(CC) -o $@ $(libpath_LDFLAGS) $< -lfoomin -lbar
+	$(CC) -o $@ $(LDFLAGS) $(libpath_LDFLAGS) $< -lfoomin -lbar
 
 mainFB: main.o libfoo.so libbar.so
-	$(CC) -o $@ $(libpath_LDFLAGS) $< -lfoo -lbar
+	$(CC) -o $@ $(LDFLAGS) $(libpath_LDFLAGS) $< -lfoo -lbar
 
 
 # ---------------------------------------------------------------------------- #
