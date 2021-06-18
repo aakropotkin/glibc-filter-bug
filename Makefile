@@ -5,7 +5,7 @@
 #
 # ============================================================================ #
 
-.PHONY: check test
+.PHONY: check test all
 
 .DEFAULT_GOAL = check
 
@@ -21,19 +21,19 @@ libpath_LDFLAGS = -L$(TOPDIR) -Wl,-rpath,$(TOPDIR)
 
 # ---------------------------------------------------------------------------- #
 
-foo.o foo_filt.o bar.o: CFLAGS += $(libs_CFLAGS)
+foo.o foo2.o foo_filt.o bar.o bar2.o: CFLAGS += $(libs_CFLAGS)
 
 
 # ---------------------------------------------------------------------------- #
-#
-libfoo.so: foo.o
-	$(CC) -o $@ -Wl,-h,$@ $(libs_LDFLAGS) $<
+
+libfoo.so: foo.o foo2.o
+	$(CC) -o $@ -Wl,-h,$@ $(libs_LDFLAGS) $^
 
 libfoomin.so: foo_filt.o libfoo.so
 	$(CC) -o $@ -Wl,-h,$@ $(libs_LDFLAGS) $(libpath_LDFLAGS) $< -Wl,-F,libfoo.so
 
-libbar.so: bar.o libfoomin.so
-	$(CC) -o $@ -Wl,-h,$@ $(libs_LDFLAGS) $(libpath_LDFLAGS) $< -lfoomin
+libbar.so: bar.o bar2.o libfoomin.so
+	$(CC) -o $@ -Wl,-h,$@ $(libs_LDFLAGS) $(libpath_LDFLAGS) bar.o bar2.o -lfoomin
 
 
 # ---------------------------------------------------------------------------- #
@@ -53,10 +53,14 @@ mainFB: main.o libfoo.so libbar.so
 
 # ---------------------------------------------------------------------------- #
 
+all: $(BINS)
+
+
 clean:
 	-$(RM) -f $(BINS) *.o lib*.so
 
-check: test.sh $(BINS)
+
+check: test.sh all
 	@./$< && echo PASS || ( echo FAIL && exit 1 )
 
 
